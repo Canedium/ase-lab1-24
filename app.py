@@ -1,6 +1,6 @@
 from flask import Flask, request, make_response, jsonify
 from functools import reduce
-import re
+import re,os , threading, signal
 app = Flask(__name__, instance_relative_config=True)
 
 @app.route('/add')
@@ -110,6 +110,21 @@ def red():
         return make_response(jsonify(s=''.join(lst)), 200)
     return make_response('Invalid operator\n', 400)
 
-# /crash which terminates the service execution after responding to the client with info about the host and the port of the service.
+# /crash which terminates the service after sending a json containing info about the host and the port of the service.
+@app.route('/crash')
+def crash():
+    threading.Thread(target=kill).start()
+    host = request.host.split(':')[0]  
+    port = request.host.split(':')[1]  
+    response_data = {
+        "host": host,
+        "port": port
+    }
+    
+    response = make_response(jsonify(response_data), 200)
+    return response
+
+def kill():
+    os.kill(os.getpid(), signal.SIGINT)
 if __name__ == '__main__':
     app.run(debug=True)
