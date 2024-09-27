@@ -1,5 +1,6 @@
 from flask import Flask, request, make_response, jsonify
-
+from functools import reduce
+import re
 app = Flask(__name__, instance_relative_config=True)
 
 @app.route('/add')
@@ -56,6 +57,59 @@ def random():
         import random
         return make_response(jsonify(s=random.randint(a, b)), 200)
 
+# /upper which given the string a it returns it in a JSON all in uppercase.
+@app.route('/upper')
+def upper():
+    a = request.args.get('a')
+    if a:
+        return make_response(jsonify(s=a.upper()), 200)
+    else:
+        return make_response('Missing parameter a\n', 400)
+# /lower which given the string a it returns it in a JSON all in lowercase.
+@app.route('/lower')
+def lower():
+    a = request.args.get('a')
+    if a:
+        return make_response(jsonify(s=a.lower()), 200)
+    else:
+        return make_response('Missing parameter a\n', 400)
+# /concat which given the strings a and b it returns in a JSON the concatenation of them.
+@app.route('/concat')
+def concat():
+    a = request.args.get('a')
+    b = request.args.get('b')
+    if a and b:
+        return make_response(jsonify(s=a+b), 200)
+    else:
+        return make_response('Missing parameters a and b\n', 400)
+# /reduce which takes the operator op (one of add, sub, mul, div, upper, lower, concat) and a lst string representing a list and apply the operator to all the elements giving the result. For instance, /reduce?op=add&lst=[2,1,3,4] returns a JSON containing {s=10}, meaning 2+1+3+4.
+@app.route('/reduce')
+def red():
+    op = request.args.get('op')
+    lst = request.args.get('lst')
+    if not op or not lst:
+        return make_response('Missing parameters op and lst\n', 400)
+    lst = re.sub(r'[\[\]]', '', lst)  # Rimuove le parentesi quadre
+    try:
+        lst = list(map(float, lst.split(',')))  # Convertire la lista in numeri
+    except ValueError:
+        return make_response('Invalid list format\n', 400)
+    if op == 'add':
+        return make_response(jsonify(s=sum(lst)), 200)
+    if op == 'sub':
+        return make_response(jsonify(s=reduce(lambda x, y: x-y, lst)), 200)
+    if op == 'mul':
+        return make_response(jsonify(s=reduce(lambda x, y: x*y, lst)), 200)
+    if op == 'div':
+        return make_response(jsonify(s=reduce(lambda x, y: x/y, lst)), 200)
+    if op == 'upper':
+        return make_response(jsonify(s=''.join(lst).upper()), 200)
+    if op == 'lower':
+        return make_response(jsonify(s=''.join(lst).lower()), 200)
+    if op == 'concat':
+        return make_response(jsonify(s=''.join(lst)), 200)
+    return make_response('Invalid operator\n', 400)
 
+# /crash which terminates the service execution after responding to the client with info about the host and the port of the service.
 if __name__ == '__main__':
     app.run(debug=True)
