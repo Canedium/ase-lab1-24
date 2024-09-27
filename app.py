@@ -102,10 +102,6 @@ def red():
         return make_response(jsonify(s=reduce(lambda x, y: x*y, lst)), 200)
     if op == 'div':
         return make_response(jsonify(s=reduce(lambda x, y: x/y, lst)), 200)
-    if op == 'upper':
-        return make_response(jsonify(s=''.join(lst).upper()), 200)
-    if op == 'lower':
-        return make_response(jsonify(s=''.join(lst).lower()), 200)
     if op == 'concat':
         return make_response(jsonify(s=''.join(lst)), 200)
     return make_response('Invalid operator\n', 400)
